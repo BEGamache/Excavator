@@ -26,4 +26,19 @@ namespace Excavator.F1
 
         public Nullable<bool> Activity_Active { get; set; }
     }
+
+    public partial class ActivityMinistry2
+    {
+        public Nullable<int> Ministry_ID { get; set; }
+
+        public Nullable<int> Activity_ID { get; set; }
+
+        public string Ministry_Name { get; set; }
+
+        public string Activity_Name { get; set; }
+
+        public Nullable<bool> Ministry_Active { get; set; }
+
+        public Nullable<bool> Activity_Active { get; set; }
+    }
 }

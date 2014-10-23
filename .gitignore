@@ -6,6 +6,7 @@
 *.v11.suo
 *.user
 *.suo
+*.notes
 #*.Framework.XML
 
 #specific files
@@ -16,6 +17,8 @@ pageviews.csv
 RockLogster.csv
 Quartz.xml
 StyleCop.Cache
+Excavator.F1.dll
+Excavator.exe
 
 #specific folders
 [Oo]bj/

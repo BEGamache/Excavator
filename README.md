@@ -1,17 +1,29 @@
-<b>Excavator</b>
-=========
+**Welcome to Excavator!**
 
-Excavator converts data into [Rock RMS](http://www.rockrms.com/) from other church management systems.  You will need the SQL file (.mdf) from your previous database and an active Rock connection.
+Build Status: [![Stories in Ready](https://badge.waffle.io/newspring/excavator.png?label=ready&title=Ready)](https://waffle.io/newspring/excavator)
 
-A FellowshipOne database model is provided (in-progress).
 
-Files you need to start an import (Excavator\bin):
-- Excavator.exe
-- Rock.dll (whichever the latest version is)
-- Excavator.exe.config (currently holds the Rock connection string)
-- Excavator.F1.dll ( or whichever database component you're using)
+![](https://raw.githubusercontent.com/wiki/newspring/excavator/excavator.jpg)
 
-Note: master branch contains fully-tested code; develop branch is beta/in-progress.
+Excavator converts data into [Rock RMS](http://www.rockrms.com/) from other church management systems.
+
+Imports from FellowshipOne and CSV are currently supported.  A port for Arena ChMS is in active development.
+
+## What You'll Need To Get Started
+- A local or hosted version of Rock
+- A login to the Rock SQL database
+- Your old database in a supported format
+- Excavator files( see below for download )
+
+## Downloads
+- [Excavator.zip](https://github.com/NewSpring/Excavator/blob/master/Excavator.zip)
+
+## What If I Have A Problem?
+- If you have a problem with the import, please file an issue on Github: [Excavator Issues](https://github.com/NewSpring/Excavator/issues)
+- Please include the type of import (F1 or CSV) in the title and your Windows environment settings in the body.
+- Example issue: "CSV: Can't import prefix with special characters"
+
+Please note that the master branch contains fully-tested code; develop branch is beta/in-progress.
 
 =========
 <b>Extending/Adding other database models:</b>
@@ -32,38 +44,6 @@ Note: master branch contains fully-tested code; develop branch is beta/in-progre
 8.  Run Excavator and select your new database component from the list on the first page<br>
 
 \* If you use additional references, set "Copy Local" to true.  Copy the additional .dll to your server for Excavator to run.
-
-=========
-<b>Fellowship One Conversion Notes:</b>
-
-Completed:
-* Accounts
-* Addresses
-* Batches
-* Communication
-* Companies
-* Contributions
-* Families (excluding visitors)
-* Individuals 
-* Pledges
-* Notes
-* Users
-
-Coming Soon:
-* Requirements
-
-Inconsistent/Not Supported**:
-* Assignments
-* Attendance
-* Attributes
-* Campuses***
-* Groups
-* Ministries
-* RLC (Room, Location, Class)
-
-** These tables depend on the specific structure of your church's ministries and groups.  Given enough sample data, it's possible generic import maps could be added.  Otherwise these import maps are custom to each church.
-
-*** If you are a multi-site church and have contributions tied to campuses, enter each campus in Rock before starting the import.  The Pledge & Contribution maps look for an exact match on the name or shortcode to assign campuses.
 
 =========
 Licensed under the Apache License, Version 2.0. You may not use this application except in compliance with the License.

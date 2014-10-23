@@ -12,6 +12,7 @@
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>486bf441</NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -33,85 +34,34 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AjaxControlToolkit">
-      <HintPath>..\Excavator\Packages\AjaxControlToolkit.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="AjaxMin">
-      <HintPath>..\Excavator\Packages\AjaxMin.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="C5">
-      <HintPath>..\Excavator\Packages\C5.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="CronExpressionDescriptor">
-      <HintPath>..\Excavator\Packages\CronExpressionDescriptor.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="DDay.iCal">
-      <HintPath>..\Excavator\Packages\DDay.iCal.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="DotLiquid">
-      <HintPath>..\Excavator\Packages\DotLiquid.dll</HintPath>
+      <HintPath>..\packages\Embeds\DotLiquid.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="EntityFramework">
-      <HintPath>..\Excavator\Packages\EntityFramework.dll</HintPath>
+      <HintPath>..\packages\EntityFramework.6.1.1\lib\net45\EntityFramework.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="EntityFramework.SqlServer">
-      <HintPath>..\Excavator\Packages\EntityFramework.SqlServer.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="EPPlus">
-      <HintPath>..\Excavator\Packages\EPPlus.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Facebook">
-      <HintPath>..\Excavator\Packages\Facebook.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="HtmlAgilityPack">
-      <HintPath>..\Excavator\Packages\HtmlAgilityPack.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="ImageResizer">
-      <HintPath>..\Excavator\Packages\ImageResizer.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\Excavator\Packages\Newtonsoft.Json.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="NuGet.Core, Version=1.6.30117.9648, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Excavator\Packages\NuGet.Core.dll</HintPath>
+      <HintPath>..\packages\EntityFramework.6.1.1\lib\net45\EntityFramework.SqlServer.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="OrcaMDF.Core">
-      <HintPath>..\Excavator\Packages\OrcaMDF.Core.dll</HintPath>
+      <HintPath>..\packages\Embeds\OrcaMDF.Core.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="OrcaMDF.Framework">
-      <HintPath>..\Excavator\Packages\OrcaMDF.Framework.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Quartz">
-      <HintPath>..\Excavator\Packages\Quartz.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="RestSharp">
-      <HintPath>..\Excavator\Packages\RestSharp.dll</HintPath>
+    <Reference Include="OrcaMDF.Framework, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Embeds\OrcaMDF.Framework.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Rock">
-      <HintPath>..\Excavator\Packages\Rock.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\Embeds\Rock.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
     <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
@@ -119,18 +69,22 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="Twilio.Api">
-      <HintPath>..\Excavator\Packages\Twilio.Api.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="F1Component.cs" />
+    <Compile Include="Maps\ActivityMinistry.cs" />
+    <Compile Include="Maps\Assignments.cs" />
     <Compile Include="Maps\Attendance.cs" />
+    <Compile Include="Maps\Attributes.cs" />
+    <Compile Include="Maps\Authorizations.cs" />
+    <Compile Include="Maps\Giftedness.cs" />
+    <Compile Include="Maps\Groups.cs" />
+    <Compile Include="Maps\IndividualContactNotes.cs" />
     <Compile Include="Maps\Notes.cs" />
     <Compile Include="Maps\Communication.cs" />
     <Compile Include="Maps\Financial.cs" />
     <Compile Include="Maps\Locations.cs" />
+    <Compile Include="Maps\RLC.cs" />
     <Compile Include="Model\Group_Attendance.cs" />
     <Compile Include="Model\GiftednessProgram.cs" />
     <Compile Include="Model\IndividualGiftedness.cs" />
@@ -167,9 +121,16 @@
     <ProjectReference Include="..\excavator\Excavator.csproj">
       <Project>{6c4100b7-6b6b-40d7-a150-deba50512c95}</Project>
       <Name>Excavator</Name>
+      <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="FodyWeavers.xml" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

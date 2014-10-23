@@ -46,6 +46,7 @@ namespace Excavator.F1
                 .Select( nt => nt.Id ).FirstOrDefault();
 
             var importedUsers = new UserLoginService( lookupContext ).Queryable()
+                .Where( u => u.ForeignId != null )
                 .Select( u => new { UserId = u.ForeignId, PersonId = u.PersonId } )
                 .ToDictionary( t => t.UserId.AsType<int?>(), t => t.PersonId );
 
@@ -60,7 +61,7 @@ namespace Excavator.F1
                 string text = row["Note_Text"] as string;
                 int? individualId = row["Individual_ID"] as int?;
                 int? householdId = row["Household_ID"] as int?;
-                int? personId = GetPersonId( individualId, householdId );
+                int? personId = GetPersonAliasId( individualId, householdId );
                 if ( personId != null && !string.IsNullOrWhiteSpace( text ) )
                 {
                     int? userId = row["NoteCreatedByUserID"] as int?;
@@ -68,10 +69,9 @@ namespace Excavator.F1
                     {
                         DateTime? dateCreated = row["NoteCreated"] as DateTime?;
                         string noteType = row["Note_Type_Name"] as string;
-                        int creatorId = (int)importedUsers[userId];
 
                         var note = new Note();
-                        note.CreatedByPersonAliasId = creatorId;
+                        note.CreatedByPersonAliasId = (int)importedUsers[userId];
                         note.CreatedDateTime = dateCreated;
                         note.EntityId = personId;
                         note.Text = text;
@@ -85,6 +85,13 @@ namespace Excavator.F1
                         {
                             note.NoteTypeId = noteTimelineTypeId;
                         }
+                        /*var rockContext = new RockContext();
+                        rockContext.WrapTransaction( () =>
+                        {
+                            rockContext.Configuration.AutoDetectChangesEnabled = false;
+                            rockContext.Notes.Add( note );
+                            rockContext.SaveChanges( DisableAudit );
+                        } );*/
 
                         noteList.Add( note );
                         completed++;
@@ -96,15 +103,9 @@ namespace Excavator.F1
                         }
                         else if ( completed % ReportingNumber < 1 )
                         {
-                            RockTransactionScope.WrapTransaction( () =>
-                            {
-                                var rockContext = new RockContext();
-                                rockContext.Configuration.AutoDetectChangesEnabled = false;
-                                rockContext.Notes.AddRange( noteList );
-                                rockContext.SaveChanges( DisableAudit );
-                            } );
-
+                            SaveNotes( noteList );
                             ReportPartialProgress();
+                            noteList.Clear();
                         }
                     }
                 }
@@ -112,16 +113,25 @@ namespace Excavator.F1
 
             if ( noteList.Any() )
             {
-                RockTransactionScope.WrapTransaction( () =>
-                {
-                    var rockContext = new RockContext();
-                    rockContext.Configuration.AutoDetectChangesEnabled = false;
-                    rockContext.Notes.AddRange( noteList );
-                    rockContext.SaveChanges( DisableAudit );
-                } );
+                SaveNotes( noteList );
             }
 
             ReportProgress( 100, string.Format( "Finished note import: {0:N0} notes imported.", completed ) );
+        }
+
+        /// <summary>
+        /// Saves the notes.
+        /// </summary>
+        /// <param name="noteList">The note list.</param>
+        private static void SaveNotes( List<Note> noteList )
+        {
+            var rockContext = new RockContext();
+            rockContext.WrapTransaction( () =>
+            {
+                rockContext.Configuration.AutoDetectChangesEnabled = false;
+                rockContext.Notes.AddRange( noteList );
+                rockContext.SaveChanges( DisableAudit );
+            } );
         }
     }
 }

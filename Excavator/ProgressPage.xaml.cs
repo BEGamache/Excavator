@@ -117,7 +117,19 @@ namespace Excavator
         private void bwImportData_DoWork( object sender, DoWorkEventArgs e )
         {
             var importUser = ConfigurationManager.AppSettings["ImportUser"];
-            e.Result = excavator.TransformData( importUser );
+            if ( String.IsNullOrEmpty( importUser ) )
+            {
+                importUser = "Admin";
+            }
+
+            try
+            {
+                e.Result = excavator.TransformData( importUser );
+            }
+            catch ( Exception ex )
+            {
+                App.LogException( "Transform Data", ex.ToString() );
+            }
         }
 
         /// <summary>
@@ -127,14 +139,27 @@ namespace Excavator
         /// <param name="e">The <see cref="RunWorkerCompletedEventArgs"/> instance containing the event data.</param>
         private void bwImportData_RunWorkerCompleted( object sender, RunWorkerCompletedEventArgs e )
         {
-            var rowsImported = (int)e.Result;
-            this.Dispatcher.Invoke( (Action)( () =>
+            var rowsImported = (int?)e.Result;
+            if ( rowsImported > 0 )
             {
-                lblHeader.Content = "Import Complete";
-                txtProgress.AppendText( "Uploaded all the data!" );
-                txtProgress.ScrollToEnd();
-                btnClose.Visibility = Visibility.Visible;
-            } ) );
+                this.Dispatcher.Invoke( (Action)( () =>
+                {
+                    lblHeader.Content = "Import Complete";
+                    txtProgress.AppendText( Environment.NewLine + DateTime.Now.ToLongTimeString() + "  Finished upload." );
+                    txtProgress.ScrollToEnd();
+                } ) );
+            }
+            else
+            {
+                this.Dispatcher.Invoke( (Action)( () =>
+                {
+                    lblHeader.Content = "Import Failed";
+                    txtProgress.AppendText( Environment.NewLine + DateTime.Now.ToLongTimeString() + "  Could not finish upload. Check the exceptions log for details." );
+                    txtProgress.ScrollToEnd();
+                } ) );
+            }
+
+            btnClose.Visibility = Visibility.Visible;
 
             BackgroundWorker bwTransformData = sender as BackgroundWorker;
             bwTransformData.RunWorkerCompleted -= new RunWorkerCompletedEventHandler( bwImportData_RunWorkerCompleted );
