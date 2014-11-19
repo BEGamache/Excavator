@@ -59,6 +59,7 @@ namespace Excavator.F1
             foreach ( var row in tableData )
             {
                 string text = row["IndividualContactNote"] as string;
+                string confidentialNote = row["ConfidentialNote"] as string; //Check if they want me to convert confidential notes.
                 int? individualId = row["IndividualID"] as int?;
                 //int? householdId = row["Household_ID"] as int?;
                 int? personId = GetPersonAliasId( individualId, null );
@@ -69,12 +70,14 @@ namespace Excavator.F1
                     {
                         DateTime? dateCreated = row["IndividualContactDatetime"] as DateTime?;
                         string noteType = row["ContactMethodName"] as string;
+                        int? individualContactId = row["IndividualContactID"] as int?;
 
                         var note = new Note();
                         note.CreatedByPersonAliasId = (int)importedUsers[userId];
                         note.CreatedDateTime = dateCreated;
                         note.EntityId = personId;
                         note.Text = text;
+                        note.ForeignId = individualContactId.ToString(); //will use this for checking existing notes.
 
                         if ( !string.IsNullOrWhiteSpace( noteType ) )
                         {
@@ -86,7 +89,16 @@ namespace Excavator.F1
                             note.NoteTypeId = noteTimelineTypeId;
                         }
 
-                        noteList.Add( note );
+                        //noteList.Add( note );
+                        //saving individually because it keeps giving me "Can't save with duplicate GUID", even though I'm not specifying the GUID.
+                        var rockContext = new RockContext();
+                        rockContext.WrapTransaction( () =>
+                        {
+                            rockContext.Configuration.AutoDetectChangesEnabled = false;
+                            rockContext.Notes.Add( note );
+                            rockContext.SaveChanges( DisableAudit );
+                        } );
+
                         completed++;
 
                         if ( completed % percentage < 1 )
@@ -96,14 +108,6 @@ namespace Excavator.F1
                         }
                         else if ( completed % ReportingNumber < 1 )
                         {
-                            var rockContext = new RockContext();
-                            rockContext.WrapTransaction( () =>
-                            {
-                                rockContext.Configuration.AutoDetectChangesEnabled = false;
-                                rockContext.Notes.AddRange( noteList );
-                                rockContext.SaveChanges( DisableAudit );
-                            } );
-
                             ReportPartialProgress();
                         }
                     }

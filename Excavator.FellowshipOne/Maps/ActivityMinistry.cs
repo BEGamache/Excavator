@@ -95,6 +95,8 @@ namespace Excavator.F1
 
             //if ( importedMinistriesAVList.Any() ) { importedMinistriesCount = importedMinistriesAVList.Count(); }
             //if ( importedActivitiesAVList.Any() ) { importedActivitiesCount = importedActivitiesAVList.Count(); }
+            var orderMax = new GroupTypeService(lookupContext).Queryable().Where(gt => gt.Order != 0).ToList();
+            int order = orderMax.Max(o => o.Order) + 1;
 
             int completed = 0;
             int totalRows = tableData.Count();
@@ -143,7 +145,7 @@ namespace Excavator.F1
                         ministryCategory.TakesAttendance = false;
                         ministryCategory.AttendanceRule = 0;
                         ministryCategory.AttendancePrintTo = 0;
-                        ministryCategory.Order = 0;
+                        ministryCategory.Order = order;
                         ministryCategory.LocationSelectionMode = 0;
                         ministryCategory.Guid = Guid.NewGuid();
                         ministryCategory.ForeignId = ministryIdString; //F1 Ministry ID
@@ -155,6 +157,7 @@ namespace Excavator.F1
                         //ministryAttribute.Value = ministryId.ToString();    //So the Value is the F1MinistryID
                         //ministryAttribute.Guid = Guid.NewGuid();
                         //ministryAttribute.ForeignId = ministryName.Trim();
+
 
                         newCategories.Add( ministryCategory );
                         //ministryAttributeList.Add(ministryAttribute);
@@ -173,6 +176,7 @@ namespace Excavator.F1
                                     rockContext.SaveChanges( DisableAudit );
                                 } );
                                 newCategories.Clear();
+                                order++;
                             }
                             //if ( ministryAttributeList.Any() )
                             //{
@@ -230,8 +234,12 @@ namespace Excavator.F1
                     activityArea.GroupMemberTerm = "Member";
 
                     //Setup Group role Id
-                    activityArea.DefaultGroupRole.Name = "Member";
-                    activityArea.DefaultGroupRole.Description = activityName + " - Assignment";
+                    var memberRole = new GroupTypeRole();
+                    memberRole.Name = "Member";
+                    memberRole.Description = "Member of Group Type: " + activityName.Trim();
+
+                    activityArea.Roles.Add( memberRole );
+                    //activityArea.DefaultGroupRoleId = activityArea.Roles.ElementAt(0).Id;
 
                     activityArea.AllowMultipleLocations = true;
                     activityArea.ShowInGroupList = true;
@@ -239,7 +247,7 @@ namespace Excavator.F1
                     activityArea.TakesAttendance = true;
                     activityArea.AttendanceRule = 0;
                     activityArea.AttendancePrintTo = 0;
-                    activityArea.Order = 0;
+                    activityArea.Order = order;
                     activityArea.LocationSelectionMode = 0;
                     activityArea.Guid = Guid.NewGuid();
                     activityArea.ForeignId = activityIdString;  //F1 Activity ID
@@ -272,6 +280,7 @@ namespace Excavator.F1
                                 rockContext.SaveChanges( DisableAudit );
                             } );
                             newAreas.Clear();
+                            order++;
                         }
                         //if ( activityAVList.Any() )
                         //{

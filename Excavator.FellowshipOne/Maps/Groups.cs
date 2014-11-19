@@ -148,6 +148,7 @@ namespace Excavator.F1
                         //connectGroups.Order = 0;
                         connectGroups.CreatedByPersonAliasId = 1;
                         connectGroups.CreatedDateTime = createdDateTime;
+                        connectGroups.ForeignId = groupId.ToString(); //Will use this for GroupsAttendance
 
                         //Save Group
                         connectGroupContext.WrapTransaction( () =>
@@ -175,7 +176,7 @@ namespace Excavator.F1
                             connectGroupMember.GroupId = existingConnectGroup;
                             connectGroupMember.PersonId = (int)personId;
                             connectGroupMember.GroupRoleId = memberGroupTypeRoleId; //will add them as a member
-                            ReportProgress( 0, string.Format( "GroupId: {0}, GroupName: {3}, PersonID: {1}, GroupRoleId: {2}", connectGroupMember.GroupId, connectGroupMember.PersonId, connectGroupMember.GroupRoleId, groupName ) );
+                           // ReportProgress( 0, string.Format( "GroupId: {0}, GroupName: {3}, PersonID: {1}, GroupRoleId: {2}", connectGroupMember.GroupId, connectGroupMember.PersonId, connectGroupMember.GroupRoleId, groupName ) );
 
                             //Save Member
                             connectGroupMemberContext.WrapTransaction( () =>
@@ -191,7 +192,7 @@ namespace Excavator.F1
                     if ( completedMembers % percentage < 1 )
                     {
                         int percentComplete = completedMembers / percentage;
-                        ReportProgress( percentComplete, string.Format( "Life Stages Imported: {0}, Groups Imported: {1}, Members Imported: {2} ({3}% complete). ", completedLifeStages, completedGroups, completedMembers, percentComplete ) );
+                        //ReportProgress( percentComplete, string.Format( "Life Stages Imported: {0}, Groups Imported: {1}, Members Imported: {2} ({3}% complete). ", completedLifeStages, completedGroups, completedMembers, percentComplete ) );
                     }
                     else if ( completedMembers % ReportingNumber < 1 )
                     {
@@ -199,6 +200,240 @@ namespace Excavator.F1
                     }
 
                 }
+
+
+                if ( groupTypeName.Trim() == "Care Ministries" )            //Moves Care Ministries into Rock Groups
+                {
+
+                    var groupTypeIdSection = new GroupTypeService( lookupContext ).Queryable().Where( gt => gt.Name == "Event/Serving/Small Group Section" ).Select( a => a.Id ).FirstOrDefault();
+                    var careMinistriesId = new GroupService( lookupContext ).Queryable().Where( g => g.Name == "Care Ministries" && g.GroupTypeId == groupTypeIdSection ).Select( a => a.Id ).FirstOrDefault();
+                    var groupTypeIdSmallGroup = new GroupTypeService( lookupContext ).Queryable().Where( gt => gt.Name == "Small Group" ).Select( a => a.Id ).FirstOrDefault();
+
+                    string groupName = row["Group_Name"] as string;
+                    int? groupId = row["Group_ID"] as int?;
+                    int? individualId = row["Individual_ID"] as int?;
+                    int? personId = GetPersonAliasId( individualId );
+                    DateTime? createdDateTime = row["Created_Date"] as DateTime?;
+
+
+                    //Check to see if Head of Care Ministries Tree exists
+
+                    //If it doesn't exist
+                    if ( careMinistriesId == 0 )
+                    {
+                        //Create one.
+                        var connectGroupTree = new Group();
+                        connectGroupTree.IsSystem = false;
+                        connectGroupTree.GroupTypeId = groupTypeIdSection;
+                        connectGroupTree.CampusId = 1;
+                        connectGroupTree.Name = "Care Ministries";
+                        connectGroupTree.Description = "Crossroads Care Ministries";
+                        connectGroupTree.IsActive = true;
+                        //connectGroupTree.Order = 0;
+                        connectGroupTree.CreatedByPersonAliasId = 1;
+                        connectGroupTree.CreatedDateTime = DateTime.Now;
+
+                        //save group
+                        var careMinistryContext = new RockContext();
+                        careMinistryContext.WrapTransaction( () =>
+                        {
+                            careMinistryContext.Configuration.AutoDetectChangesEnabled = false;
+                            careMinistryContext.Groups.Add( connectGroupTree );
+                            careMinistryContext.SaveChanges( DisableAudit );
+                        } );
+                    }
+
+                    int existingConnectGroup = new GroupService( lookupContext ).Queryable().Where( g => g.Name == groupName ).Select( a => a.Id ).FirstOrDefault();
+                    int existingCareMinistries = new GroupService( lookupContext ).Queryable().Where( g => g.Name == "Care Ministries" ).Select( a => a.Id ).FirstOrDefault();
+                   
+                    //check to see if Connect Group exists.
+                    if ( existingConnectGroup == 0 )
+                    {
+                        //Create one.
+                        var careGroup = new Group();
+                        careGroup.IsSystem = false;
+                        careGroup.GroupTypeId = groupTypeIdSmallGroup;
+                        careGroup.ParentGroupId = existingCareMinistries;
+                        careGroup.CampusId = 1;
+                        careGroup.Name = groupName;
+                        careGroup.Description = "";
+                        careGroup.IsActive = true;
+                        //connectGroups.Order = 0;
+                        careGroup.CreatedByPersonAliasId = 1;
+                        careGroup.CreatedDateTime = createdDateTime;
+                        careGroup.ForeignId = groupId.ToString(); //will use this later for GroupsAttendance
+
+                        //Save Group
+                        var careMinistryGroupContext = new RockContext();
+                        careMinistryGroupContext.WrapTransaction( () =>
+                        {
+                            careMinistryGroupContext.Configuration.AutoDetectChangesEnabled = false;
+                            careMinistryGroupContext.Groups.Add( careGroup );
+                            careMinistryGroupContext.SaveChanges( DisableAudit );
+                        } );
+                        completedGroups++;
+                    }
+
+                    existingConnectGroup = new GroupService( lookupContext ).Queryable().Where( g => g.Name == groupName ).Select( a => a.Id ).FirstOrDefault();
+
+                    //Adds Group Member(s)
+                    //makes sure Connect Group Exists
+                    if ( existingConnectGroup != 0 )
+                    {
+                        int memberGroupTypeRoleId = new GroupTypeRoleService( lookupContext ).Queryable().Where( g => g.GroupTypeId == groupTypeIdSmallGroup && g.Name == "Member" ).Select( a => a.Id ).FirstOrDefault();
+                        int groupMemberExists = new GroupMemberService( lookupContext ).Queryable().Where( g => g.GroupId == existingConnectGroup && g.PersonId == personId && g.GroupRoleId == memberGroupTypeRoleId ).Select( a => a.Id ).FirstOrDefault();
+                        if ( groupMemberExists == 0 )
+                        {
+                            //adds member
+                            var connectGroupMember = new GroupMember();
+                            connectGroupMember.IsSystem = false;
+                            connectGroupMember.GroupId = existingConnectGroup;
+                            connectGroupMember.PersonId = (int)personId;
+                            connectGroupMember.GroupRoleId = memberGroupTypeRoleId; //will add them as a member
+                            //ReportProgress( 0, string.Format( "GroupId: {0}, GroupName: {3}, PersonID: {1}, GroupRoleId: {2}", connectGroupMember.GroupId, connectGroupMember.PersonId, connectGroupMember.GroupRoleId, groupName ) );
+
+                            //Save Member
+                            var careGroupMemberContext = new RockContext();
+                            careGroupMemberContext.WrapTransaction( () =>
+                            {
+                                careGroupMemberContext.Configuration.AutoDetectChangesEnabled = false;
+                                careGroupMemberContext.GroupMembers.Add( connectGroupMember );
+                                careGroupMemberContext.SaveChanges( DisableAudit );
+                            } );
+                            completedMembers++;
+                        }
+                    }
+
+                    if ( completedMembers % percentage < 1 )
+                    {
+                        int percentComplete = completedMembers / percentage;
+                       // ReportProgress( percentComplete, string.Format( "Life Stages Imported: {0}, Groups Imported: {1}, Members Imported: {2} ({3}% complete). ", completedLifeStages, completedGroups, completedMembers, percentComplete ) );
+                    }
+                    else if ( completedMembers % ReportingNumber < 1 )
+                    {
+                        ReportPartialProgress();
+                    }
+
+                }
+
+
+                if ( groupTypeName.Trim() == "Intro Connect Groups" )            //Moves Intro Connect Groups into Rock Groups
+                {
+
+                    var groupTypeIdSection = new GroupTypeService( lookupContext ).Queryable().Where( gt => gt.Name == "Event/Serving/Small Group Section" ).Select( a => a.Id ).FirstOrDefault();
+                    var introConnectGroupsId = new GroupService( lookupContext ).Queryable().Where( g => g.Name == "Intro Connect Groups" && g.GroupTypeId == groupTypeIdSection ).Select( a => a.Id ).FirstOrDefault();
+                    var groupTypeIdSmallGroup = new GroupTypeService( lookupContext ).Queryable().Where( gt => gt.Name == "Small Group" ).Select( a => a.Id ).FirstOrDefault();
+
+                    string groupName = row["Group_Name"] as string;
+                    int? groupId = row["Group_ID"] as int?;
+                    int? individualId = row["Individual_ID"] as int?;
+                    int? personId = GetPersonAliasId( individualId );
+                    DateTime? createdDateTime = row["Created_Date"] as DateTime?;
+
+
+                    //Check to see if Head of Care Ministries Tree exists
+
+                    //If it doesn't exist
+                    if ( introConnectGroupsId == 0 )
+                    {
+                        //Create one.
+                        var connectGroupTree = new Group();
+                        connectGroupTree.IsSystem = false;
+                        connectGroupTree.GroupTypeId = groupTypeIdSection;
+                        connectGroupTree.CampusId = 1;
+                        connectGroupTree.Name = "Intro Connect Groups";
+                        connectGroupTree.Description = "Crossroads Intro Connect Groups";
+                        connectGroupTree.IsActive = true;
+                        //connectGroupTree.Order = 0;
+                        connectGroupTree.CreatedByPersonAliasId = 1;
+                        connectGroupTree.CreatedDateTime = DateTime.Now;
+
+                        //save group
+                        var introConnectGroupTreeContext = new RockContext();
+                         introConnectGroupTreeContext.WrapTransaction( () =>
+                        {
+                            introConnectGroupTreeContext.Configuration.AutoDetectChangesEnabled = false;
+                            introConnectGroupTreeContext.Groups.Add( connectGroupTree );
+                            introConnectGroupTreeContext.SaveChanges( DisableAudit );
+                        } );
+                    }
+
+                    int existingConnectGroup = new GroupService( lookupContext ).Queryable().Where( g => g.Name == groupName ).Select( a => a.Id ).FirstOrDefault();
+                    int existingIntroConnectGroup = new GroupService( lookupContext ).Queryable().Where( g => g.Name == "Intro Connect Groups" ).Select( a => a.Id ).FirstOrDefault();
+
+                    //check to see if Connect Group exists.
+                    if ( existingConnectGroup == 0 )
+                    {
+                        //Create one.
+                        var introConnectGroup = new Group();
+                        introConnectGroup.IsSystem = false;
+                        introConnectGroup.GroupTypeId = groupTypeIdSmallGroup;
+                        introConnectGroup.ParentGroupId = existingIntroConnectGroup;
+                        introConnectGroup.CampusId = 1;
+                        introConnectGroup.Name = groupName;
+                        introConnectGroup.Description = "";
+                        introConnectGroup.IsActive = true;
+                        //connectGroups.Order = 0;
+                        introConnectGroup.CreatedByPersonAliasId = 1;
+                        introConnectGroup.CreatedDateTime = createdDateTime;
+                        introConnectGroup.ForeignId = groupId.ToString(); //will use this later for GroupsAttendance
+
+                        //Save Group
+                        var introConnectGroupConext = new RockContext();
+                        introConnectGroupConext.WrapTransaction( () =>
+                        {
+                            introConnectGroupConext.Configuration.AutoDetectChangesEnabled = false;
+                            introConnectGroupConext.Groups.Add( introConnectGroup );
+                            introConnectGroupConext.SaveChanges( DisableAudit );
+                        } );
+                        completedGroups++;
+                    }
+
+                    existingConnectGroup = new GroupService( lookupContext ).Queryable().Where( g => g.Name == groupName ).Select( a => a.Id ).FirstOrDefault();
+
+                    //Adds Group Member(s)
+                    //makes sure Connect Group Exists
+                    if ( existingConnectGroup != 0 )
+                    {
+                        int memberGroupTypeRoleId = new GroupTypeRoleService( lookupContext ).Queryable().Where( g => g.GroupTypeId == groupTypeIdSmallGroup && g.Name == "Member" ).Select( a => a.Id ).FirstOrDefault();
+                        int groupMemberExists = new GroupMemberService( lookupContext ).Queryable().Where( g => g.GroupId == existingConnectGroup && g.PersonId == personId && g.GroupRoleId == memberGroupTypeRoleId ).Select( a => a.Id ).FirstOrDefault();
+                        if ( groupMemberExists == 0 )
+                        {
+                            //adds member
+                            var connectGroupMember = new GroupMember();
+                            connectGroupMember.IsSystem = false;
+                            connectGroupMember.GroupId = existingConnectGroup;
+                            connectGroupMember.PersonId = (int)personId;
+                            connectGroupMember.GroupRoleId = memberGroupTypeRoleId; //will add them as a member
+                            //ReportProgress( 0, string.Format( "GroupId: {0}, GroupName: {3}, PersonID: {1}, GroupRoleId: {2}", connectGroupMember.GroupId, connectGroupMember.PersonId, connectGroupMember.GroupRoleId, groupName ) );
+
+                            //Save Member
+                            var introConnectGroupMemberConext = new RockContext();
+                            introConnectGroupMemberConext.WrapTransaction( () =>
+                            {
+                                introConnectGroupMemberConext.Configuration.AutoDetectChangesEnabled = false;
+                                introConnectGroupMemberConext.GroupMembers.Add( connectGroupMember );
+                                introConnectGroupMemberConext.SaveChanges( DisableAudit );
+                            } );
+                            completedMembers++;
+                        }
+                    }
+
+                    if ( completedMembers % percentage < 1 )
+                    {
+                        int percentComplete = completedMembers / percentage;
+                       // ReportProgress( percentComplete, string.Format( "Life Stages Imported: {0}, Groups Imported: {1}, Members Imported: {2} ({3}% complete). ", completedLifeStages, completedGroups, completedMembers, percentComplete ) );
+                    }
+                    else if ( completedMembers % ReportingNumber < 1 )
+                    {
+                        ReportPartialProgress();
+                    }
+
+                }
+
+
+
+
                 if ( groupTypeName.Trim() == "People List" )    //Places People Lists in tags
                 {
 
@@ -311,7 +546,7 @@ namespace Excavator.F1
                             if ( completedIndividualTags % percentage < 1 )
                             {
                                 int percentComplete = completedIndividualTags / percentage;
-                                ReportProgress( percentComplete, string.Format( "People Lists / Tags Imported: {0:N0}, Tagged Individuals: {1:N0} ({2:N0}% complete). ", completedTags, completedIndividualTags, percentComplete ) );
+                               // ReportProgress( percentComplete, string.Format( "People Lists / Tags Imported: {0:N0}, Tagged Individuals: {1:N0} ({2:N0}% complete). ", completedTags, completedIndividualTags, percentComplete ) );
                             }
                             else if ( completedMembers % ReportingNumber < 1 )
                             {

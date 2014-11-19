@@ -249,6 +249,11 @@ namespace Excavator.F1
                             case "ActivityAssignment":
                                 MapActivityAssignment( scanner.ScanTable( table.Name ).AsQueryable() );
                                     break;
+                            case "GroupsAttendance":
+                                    MapGroupsAttendance( scanner.ScanTable( table.Name ).AsQueryable() );
+                                    break;
+
+                                
 
                             default:
                                 break;

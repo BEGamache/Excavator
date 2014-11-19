@@ -48,7 +48,7 @@ namespace Excavator.F1
             int completed = 0;
             int totalRows = tableData.Count();
             int percentage = ( totalRows - 1 ) / 100 + 1;
-            ReportProgress( 0, string.Format( "Verifying Giftedness Program import ({0:N0} found).", totalRows ) );
+            ReportProgress( 0, string.Format( "Verifying Authorization import ({0:N0} found).", totalRows ) );
 
             var attributeList = new AttributeService( lookupContext ).Queryable().ToList();
             int authorizationAttributeId = 0;
@@ -59,8 +59,14 @@ namespace Excavator.F1
 
             var authorizationAttributeValueList = new List<AttributeValue>();
             authorizationAttributeValueList = new AttributeValueService( rockContext ).Queryable().Where( av => av.AttributeId == authorizationAttributeId ).ToList();
-            
 
+            int f1HouseholdIdAttributeId = attributeList.Find( a => a.Key == "F1HouseholdId" ).Id;
+
+            //places all household attributes in a dictionary where the key is the personId and the houshold is the value.
+            var householdDictionary = new AttributeValueService( lookupContext ).Queryable()
+                .Where( av => av.AttributeId == f1HouseholdIdAttributeId )
+                .Select( av => new { PersonId = av.EntityId, HouseholdId = av.Value } )
+                .ToDictionary( t => t.PersonId, t => t.HouseholdId );
 
 
             foreach ( var row in tableData )
@@ -154,14 +160,6 @@ namespace Excavator.F1
                 //Gets the Attribute Id for Pickup Authorization.
                 authorizationAttributeId = attributeList.Find(a => a.Key == "PickupAuthorization").Id;
 
-                int f1HouseholdIdAttributeId = attributeList.Find( a => a.Key == "F1HouseholdId" ).Id;
-
-                //places all household attributes in a dictionary where the key is the personId and the houshold is the value.
-                var householdDictionary = new AttributeValueService( lookupContext ).Queryable()
-                    .Where( av => av.AttributeId == f1HouseholdIdAttributeId )
-                    .Select( av => new { PersonId = av.EntityId, HouseholdId = av.Value } )
-                    .ToDictionary( t => t.PersonId, t => t.HouseholdId );
-
 
                 //since F1 authorization applies to the household id and not individual I have to apply it to all members in that household.
                 //Value in F1 is a text entry and not a person select. Discuss with staff that we need to break away from this and start using known relationships for authorization
@@ -174,7 +172,7 @@ namespace Excavator.F1
                         var person = new PersonService( rockContext ).Queryable().Where( p => p.Id == household.Key ).FirstOrDefault();
 
                         //trying to keep from adding this attribute to adult records
-                        if ( person.Age <= 18 || person.Age == null )
+                        if ( person != null && (person.Age <= 18 || person.Age == null) )
                         {
                             //creates new attribute record if it does not exist.
                             var newAuthorizationAttribute = new AttributeValue();

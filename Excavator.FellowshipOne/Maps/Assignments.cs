@@ -67,7 +67,8 @@ namespace Excavator.F1
                     var existingRLCGroup = new GroupService( lookupContext ).Queryable().Where( g => g.ForeignId == rlcID ).FirstOrDefault();
 
                     //Gets member group type role Id.   
-                    int? memberGroupTypeRoleId = new GroupTypeService( lookupContext ).Queryable().Where( g => g.ForeignId == activityID ).FirstOrDefault().DefaultGroupRoleId;
+                    int? groupTypeId = new GroupTypeService( lookupContext ).Queryable().Where( g => g.ForeignId == activityID ).FirstOrDefault().Id;
+                    int? memberGroupTypeRoleId = new GroupTypeRoleService( lookupContext ).Queryable().Where( g => g.GroupTypeId == groupTypeId ).FirstOrDefault().Id;
                     if ( memberGroupTypeRoleId != null || memberGroupTypeRoleId != 0 )
                     {
 

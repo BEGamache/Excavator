@@ -204,9 +204,10 @@ namespace Excavator.F1
 
                 }
                 //checks if Defined Value exists
+                var spiritualGiftsDefineType = new DefinedTypeService( rockContext ).Queryable().Where( d => d.Name == "Spiritual Gifts" ).FirstOrDefault();
                 string attributeName = row["AttributeName"] as string;
                 int? giftAttributeId = row["GiftAttributeID"] as int?;
-                if ( definedValueList.Find( d => d.Value == attributeName ) == null )
+                if ( definedValueList.Find( d => d.DefinedTypeId == spiritualGiftsDefineType.Id && d.Value == attributeName ) == null )
                 {
                     var definedTypeService = new DefinedTypeService( rockContext );
                     //creates Defined Value
@@ -241,7 +242,7 @@ namespace Excavator.F1
                 }
             }
 
-            ReportProgress( 100, string.Format( "Finished note import: {0:N0} spiritual gifts attributes imported.", completed ) );
+            ReportProgress( 100, string.Format( "Finished spiritual gifts import: {0:N0} spiritual gifts attributes imported.", completed ) );
         }
         /// <summary>
         /// Maps the Individual Giftedness.
@@ -346,7 +347,7 @@ namespace Excavator.F1
                 } );
             }
 
-            ReportProgress( 100, string.Format( "Finished note import: {0:N0} spiritual gifts imported.", completed ) );
+            ReportProgress( 100, string.Format( "Finished individual gifts import: {0:N0} spiritual gifts imported.", completed ) );
         }
     }
 }

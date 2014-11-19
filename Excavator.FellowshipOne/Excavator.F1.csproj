@@ -77,6 +77,7 @@
     <Compile Include="Maps\Attendance.cs" />
     <Compile Include="Maps\Attributes.cs" />
     <Compile Include="Maps\Authorizations.cs" />
+    <Compile Include="Maps\GroupsAttendance.cs" />
     <Compile Include="Maps\Giftedness.cs" />
     <Compile Include="Maps\Groups.cs" />
     <Compile Include="Maps\IndividualContactNotes.cs" />

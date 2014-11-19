@@ -47,6 +47,9 @@ namespace Excavator.F1
             ReportProgress( 0, string.Format( "Verifying Attendance import ({0:N0} found).", totalRows ) );
 
             var attendanceList = new List<Rock.Model.Attendance>();
+            var groupService = new GroupService( lookupContext );
+            var existingGroupList = new List<Group>();
+            existingGroupList = groupService.Queryable().ToList();
 
             foreach ( var row in tableData )
             {
@@ -55,7 +58,7 @@ namespace Excavator.F1
                 if ( startTime != null && startTime != DateTime.MinValue)
                 {
                     DateTime startDateTime = (DateTime)startTime;
-                    if ( startDateTime.Year >= 2013 )
+                    if ( startDateTime.Year == 2014 && startDateTime.Month >= 1 && startDateTime.Month <= 8 )
                     { 
 
                     //startDateTime = BruteForceDateTime(startTime);
@@ -67,6 +70,7 @@ namespace Excavator.F1
                     attendance.ModifiedDateTime = DateTime.Today;
                     attendance.StartDateTime = startDateTime; //(DateTime)startTime; 
                     attendance.DidAttend = true;
+                    attendance.CampusId = 1; //Campus is needed for attendance to show in attendance analysis.
 
 
                     //string position = row["CheckedInAs"] as string;
@@ -112,10 +116,6 @@ namespace Excavator.F1
 
 
                         //look up Group
-                        var groupService = new GroupService( lookupContext );
-                        var existingGroupList = new List<Group>();
-                        existingGroupList = groupService.Queryable().ToList();
-
                         Group rlcGroup = existingGroupList.Where( g => g.ForeignId == ( rlcId.ToString() ) ).FirstOrDefault();
                         if ( rlcGroup != null )
                         {
